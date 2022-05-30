@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -15,9 +16,10 @@ class UserController extends Controller
      */
     public function index()
     {
+        $users = User::with('profile, clocks')->get();
         return response()->json([
             'status' => 'true',
-            'data' => User::all()
+            'data' => $users
         ]);
     }
 
@@ -61,6 +63,29 @@ class UserController extends Controller
         
     }
 
+    public function getSalaries()
+    {
+        $users = User::with('clocks')->with('profile')->get();
+        foreach ($users as $key => $user) {
+            $heures = 0;
+            foreach ($user->clocks as $key => $clock) {
+                $a = new Carbon($clock->hour_end);
+                $b = new Carbon($clock->hour_start);
+                $d = $a->diffInMinutes($b) / 60;
+                if ((($d - intval($d)) * 60) > 30) {
+                    $heures += (intval($d) + 1);
+                } else {
+                    $heures += intval($d);
+                }
+            }
+            $user->salaire_fin = ($user->salary * $heures) / 160;
+        }
+        return response()->json([
+            'status' => 'true',
+            'data' => $users,
+        ]);
+    }
+
     /**
      * Display the specified resource.
      *
@@ -69,7 +94,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::find($id);
+        $user = User::with('profile')->with('justifs')->with('clocks')->find($id);
         if ($user != null) {
             return response()->json([
                 'status' => 'true',
@@ -98,7 +123,6 @@ class UserController extends Controller
             'phone' => 'required|string|min:10',
             'salary' => 'required|integer',
             'profile_id' => 'required|integer',
-            'email' => 'required|email|unique',
             'password' => 'required|string|min:6',
         ]);
         $user = User::find($id);
@@ -118,7 +142,7 @@ class UserController extends Controller
         } else {
             return response()->json([
                 'status' => 'false',
-                'message' => 'not updated.',
+                'message' => 'employé non modifié.',
             ]);
         }
     }

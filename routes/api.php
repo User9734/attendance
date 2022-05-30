@@ -34,12 +34,17 @@ Route::group([
 });
 
 Route::apiResource('/users', UserController::class);
+Route::get('/salaries', [UserController::class, 'getSalaries']);
 
 Route::apiResource('/clocks', ClockController::class);
+Route::get('/byday', [ClockController::class, 'indexbyday']);
+Route::get('/perfs', [ClockController::class, 'getPerformances']);
+Route::post('/recaps', [ClockController::class, 'getRecapitulatifs']);
 
-Route::apiResource('/profiles', ProfileController::class);
+Route::apiResource('/profiles', ProfileController::class)->middleware('auth:api');
 
 Route::apiResource('/justifs', JustificationController::class);
+Route::get('/unvalidated', [JustificationController::class, 'getUnvalidated']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

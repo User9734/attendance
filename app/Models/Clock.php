@@ -16,6 +16,6 @@ class Clock extends Model
     }
 
     public function justif(){
-        return $this->hasMany(Justification::class, 'clock_id');
+        return $this->hasOne(Justification::class, 'clock_id');
     }
 }

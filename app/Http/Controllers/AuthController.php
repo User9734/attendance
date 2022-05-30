@@ -76,6 +76,7 @@ class AuthController extends Controller
             'access_token' => $tokenResult->accessToken,
             'user' => $user,
             'token_type' => 'Bearer',
+            'status' => 'true',
             'expires_at' => Carbon::parse(
                 $tokenResult->token->expires_at
             )->toDateTimeString()
@@ -91,7 +92,8 @@ class AuthController extends Controller
     {
         $request->user()->token()->revoke();
         return response()->json([
-            'message' => 'Successfully logged out'
+            'status' => 'true',
+            'message' => 'Déconnecté avec succès'
         ]);
     }
   

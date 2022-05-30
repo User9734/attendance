@@ -11,4 +11,8 @@ class Profile extends Model
 {
     use SoftDeletes, Notifiable;
     protected $fillable = ['name', 'tier', 'extern_clock'];
+
+    public function user(){
+        return $this->hasMany(User::class);
+    }
 }

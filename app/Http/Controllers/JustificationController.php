@@ -16,25 +16,17 @@ class JustificationController extends Controller
      */
     public function index()
     {
-        $ipaddress = '';
-       if (isset($_SERVER['HTTP_CLIENT_IP']))
-           $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
-       else if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
-           $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
-       else if(isset($_SERVER['HTTP_X_FORWARDED']))
-           $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
-       else if(isset($_SERVER['HTTP_FORWARDED_FOR']))
-           $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
-       else if(isset($_SERVER['HTTP_FORWARDED']))
-           $ipaddress = $_SERVER['HTTP_FORWARDED'];
-       else if(isset($_SERVER['REMOTE_ADDR']))
-           $ipaddress = $_SERVER['REMOTE_ADDR'];
-       else
-           $ipaddress = 'UNKNOWN';  
-        
-        $datas = Location::get($ipaddress);
-    
-       return $datas;
+       
+    }
+
+    public function getUnvalidated(Request $request)
+    {
+        $sup = $request->user('api');
+       $justifs = Justification::with('clock')->where('sup_id', $sup->id)->where('state', 'justified')->get();
+       return response()->json([
+        'status' => 'true',
+        'data' => $justifs
+    ]);
     }
 
     /**
@@ -45,10 +37,7 @@ class JustificationController extends Controller
      */
     public function store(Request $request)
     {
-        $PublicIP = $request->ip;
-        $datas = Location::get($PublicIP);
         
-        return $datas;
     }
 
     /**
@@ -74,20 +63,19 @@ class JustificationController extends Controller
         $justif = Justification::with('clock')->where('clock_id',$id)->first();
         $user = $request->user('api');
         $justif->cause = $request->cause;
-        $justif->state = $request->state;
-        $justif->clock_id = $user->id;
-        $justif->save();
+        
         if ($justif->wasChanged()) {
+            $justif->state = 'justified';
+            $justif->clock_id = $user->id;
+            $justif->save();
             return response()->json([
                 'status' => 'true',
-                'message' => 'justified',
                 'data' => $justif
             ]);
         } else {
-            return response()->json([
-                'status' => 'false',
-                'message' => 'not justified'
-            ]);
+            $justif->state = 'processing';
+            $justif->clock_id = $user->id;
+            $justif->save();
         }
     }
 
